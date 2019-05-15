@@ -6,8 +6,8 @@
 *.meta
 *.backup
 *.pdb
-/Logs/*
-/Library/*
-/Packages/*
-/ProjectSettings/*
-/Temp/*
+/within/Logs/*   
+/within/Packages/*
+/within/ProjectSettings/*
+/within/Temp/*
+/within/Library
