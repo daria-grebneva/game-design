@@ -388,8 +388,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a7c2cab335eca84d9c97b079588698f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myPrefab: {fileID: 2246337837781913807, guid: 08f9c527b736e5946a1f8c8c2baabb78,
-    type: 3}
+  circle: {fileID: 3075209466351038555, guid: 08f9c527b736e5946a1f8c8c2baabb78, type: 3}
+  square: {fileID: 4602273140064646010, guid: 38a6ec62e26fee54e857ebc1826bb9e3, type: 3}
 --- !u!23 &1468744138
 MeshRenderer:
   m_ObjectHideFlags: 0
