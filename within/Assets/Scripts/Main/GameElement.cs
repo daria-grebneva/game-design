@@ -25,8 +25,7 @@ public class GameElement : MonoBehaviour
         }
         
         _mainSystem.AddToListOfSlected(this);
-//Debug.Log("AAAAAAAAAAAAAAAAAA");
-        //.TriggerFigure(TrueVariant, Size);
+
 
     }
 
@@ -60,19 +59,26 @@ public class GameElement : MonoBehaviour
 
         TrueVariant = trueFigure;
         
+        Vector2 minMaxPos =  new Vector2(Screen.width*0.35f-50.0f*Size,Screen.height*0.33f-50.0f*Size);
+        transform.localPosition = new Vector3(Random.Range(-minMaxPos.x,minMaxPos.x),Random.Range(-minMaxPos.y,minMaxPos.y),0);
+
         if (mainSys._positionsOfCircles.Count == 0)
         {
             mainSys._positionsOfCircles.Add(new Vector3(transform.position.x,transform.position.y,Size*50));
         }
         else
         {
-            
             foreach (var circleOld in mainSys._positionsOfCircles)
             {
-                Vector2 minMaxPos =  new Vector2(Screen.width-Size,Screen.height-Size)/2.0f;
-                transform.localPosition = new Vector3(Random.Range(-minMaxPos.x,minMaxPos.x),Random.Range(-minMaxPos.y,minMaxPos.y),0);
+                float distanceBw = Vector2.Distance((Vector2)circleOld,transform.position);
+                if (distanceBw < Mathf.Max(circleOld.z,Size*50))
+                {
+                    transform.position += (Vector3)(((Vector2)transform.position-(Vector2)circleOld).normalized*Mathf.Max(circleOld.z,Size*50));
+                }
             }
         }
+        
+        transform.localPosition = new Vector3(Mathf.Min(transform.localPosition.x,minMaxPos.x),Mathf.Min(transform.localPosition.y,minMaxPos.y),0);
         
         LineFade.SetData();
         Line.parent = mainSys._gameElementContainerLineChild;

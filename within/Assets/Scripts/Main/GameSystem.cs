@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,10 +8,13 @@ public class GameSystem : MonoBehaviour
 {
     #region Активные параметры
 
+    public bool FirstStart = true;
     public float GameTimer;
     public int MainLevel;
     public int PointLevel;
-    public int GlobalLevel;
+    //public int GlobalLevel;
+    public bool GamePaused;
+    public Vector2Int WinAndAtt = Vector2Int.zero;
     
     public Vector2 MinMaxSize;
     public float TrueSize;
@@ -32,11 +36,13 @@ public class GameSystem : MonoBehaviour
     #region Инспектор
     
     [SerializeField] private Transform _timerLine;
+    [SerializeField] private string[] _SorryTexts;
     [SerializeField] private Text _timerText;
     [SerializeField] private Text _levelText;
     [SerializeField] private FadeOutText _fancyText;
     [SerializeField] private FadeOutText _resultText;
     [SerializeField] private Image _fadeOnScene;
+    [SerializeField] private FadeOutText _fadeOnSceneText;
     [SerializeField] private SizeOutInFade[] _points;
     
     [SerializeField] private GameObject _gameElementPrefab;
@@ -45,21 +51,77 @@ public class GameSystem : MonoBehaviour
     [SerializeField] private Transform _gameElementContainerBody;
     [SerializeField] private Transform _gameElementContainerLine;
     [SerializeField] private Transform _gameElementContainerBodyChild;
+
+    [SerializeField] private Text _textWinAndAtt;
      public Transform _gameElementContainerLineChild;
     [SerializeField] private Transform _gameAreaContainer;
      public Transform _gameAreaContainerChild;
-    
-    
+
+    private MenuSystem _menuSystem;
     #endregion
 
     private void Start()
     {
+        _menuSystem = GetComponent<MenuSystem>();
+        GamePaused = true;
         _corTimer = StartCoroutine(TimerCor());
-        GenerateNewLevel();
-        foreach (var point in _points)
+    }
+
+    public void StartGame()
+    {
+        MainLevel = PlayerPrefs.GetInt("LEVEL");
+        PointLevel = PlayerPrefs.GetInt("POINT");
+        WinAndAtt.y = PlayerPrefs.GetInt("LEVEL_Att");
+        WinAndAtt.x = PlayerPrefs.GetInt("LEVEL_Win");
+        _textWinAndAtt.text = "["+WinAndAtt.x+"-"+WinAndAtt.y+"]";
+        
+        for (int i = 0; i < 3; i++)
         {
-            point.InvokeFadeOut();
+            if (i < (PointLevel-1))
+            {
+                _points[i].InvokeFadeIn();
+            }
+            else
+            {
+                _points[i].InvokeFadeOut();
+            }
         }
+        _levelText.text = "LEVEL " +(MainLevel+1);
+
+        if (FirstStart)
+        {
+            if(_corTimer != null){StopCoroutine(_corTimer);}
+            StartCoroutine(StartNewLevel());
+        }
+        else
+        {
+
+            GenerateNewLevel();
+
+            GamePaused = false;
+        }
+    }
+
+    public void StartNewGame()
+    {
+        MainLevel = PlayerPrefs.GetInt("LEVEL");
+        PointLevel = PlayerPrefs.GetInt("POINT");
+        WinAndAtt.y = PlayerPrefs.GetInt("LEVEL_Att");
+        WinAndAtt.x = PlayerPrefs.GetInt("LEVEL_Win");
+        _textWinAndAtt.text = "["+WinAndAtt.x+"-"+WinAndAtt.y+"]";
+        for (int i = 0; i < 3; i++)
+        {
+            if (i <= (PointLevel-1))
+            {
+                _points[i].InvokeFadeIn();
+            }else
+            {
+                _points[i].InvokeFadeOut();
+            }
+        }
+        _levelText.text = "LEVEL " +(MainLevel+1);
+        if(_corTimer != null){StopCoroutine(_corTimer);}
+        StartCoroutine(StartNewLevel());
     }
 
     public void ToClearScene()
@@ -109,6 +171,18 @@ public class GameSystem : MonoBehaviour
     public void GenerateNewLevel()
     {
         CreateClearScene();
+
+        if (MainLevel >= 1)
+        {
+            Color classicColor = new Color(0.855f, 0.855f, 0.855f, 1);
+            Camera.main.backgroundColor = Color.Lerp(classicColor,Random.ColorHSV(),0.9f*Mathf.Clamp01((MainLevel-2)/20.0f));
+            
+        }
+        else
+        {
+            Camera.main.backgroundColor = new Color(0.855f, 0.855f, 0.855f, 1);
+            
+        }
         
         TrueSize = Random.Range(MinMaxSize.x, MinMaxSize.y);
 
@@ -131,11 +205,16 @@ public class GameSystem : MonoBehaviour
                 if (Random.Range(0.0f,1.0f) >= 0.5f)
                 {
                     float sizeFigure = Mathf.Clamp(TrueSize+Random.Range(1,colOfFigures+1)*LevelsSizeOffset[MainLevel],MinMaxSize.x,1.5f*MinMaxSize.y);
+                    if (MainLevel >= 6)
+                    {
+                        sizeFigure = Mathf.Lerp(sizeFigure,TrueSize,((MainLevel-5.0f)/10.0f));
+                    }
                     FigureGameElement.Generate(this,sizeFigure);
                 }
                 else
                 {
                     float sizeFigure = Mathf.Clamp(TrueSize-Random.Range(1,colOfFigures+1)*LevelsSizeOffset[MainLevel],0.5f*MinMaxSize.x,MinMaxSize.y);
+                    sizeFigure = Mathf.Lerp(sizeFigure,TrueSize,((MainLevel-5.0f)/10.0f));
                     FigureGameElement.Generate(this,sizeFigure);
                 }
             }
@@ -156,6 +235,12 @@ public class GameSystem : MonoBehaviour
         GameObject newArea = Instantiate(_gameAreaPrefab,_gameAreaContainerChild);
         newArea.transform.localPosition = Vector3.zero;
         newArea.transform.localScale = Vector3.one * TrueSize;
+        
+        if (MainLevel >= 4)
+        {
+            newArea.transform.Rotate(Vector3.forward*Random.Range(0,360));
+        }
+        
 
         _trueVariantOfElement.gameObject.transform.SetAsLastSibling();
     }
@@ -165,8 +250,9 @@ public class GameSystem : MonoBehaviour
         while (GameTimer > 0)
         {
             _timerText.text = ""+((int) GameTimer);
-            _timerLine.localScale = new Vector3(GameTimer/(35.0f-(GlobalLevel*3)),1,1);
-            GameTimer -= Time.deltaTime;
+            _timerLine.localScale = new Vector3((GameTimer/30.0f),1,1);
+            //_timerLine.localScale = new Vector3(GameTimer/(30.0f-(GlobalLevel*3)),1,1);
+            GameTimer -= GamePaused ? 0 : Time.deltaTime;
             yield return new WaitForEndOfFrame();
         }
         
@@ -180,7 +266,7 @@ public class GameSystem : MonoBehaviour
         
         _resultText.InvokeFade("Время вышло!");
 
-        GlobalLevel = 0;
+        //GlobalLevel = 0;
         MainLevel = 0;
         PointLevel = 0;
             
@@ -196,32 +282,42 @@ public class GameSystem : MonoBehaviour
     IEnumerator StartNewLevel()
     {
         float timerLocal = 1.85f;
-        
-        while (timerLocal > 0)
+        _fadeOnSceneText.InvokeFade();
+        if (!FirstStart)
         {
-            timerLocal -= Time.deltaTime;
-            yield return new WaitForEndOfFrame();
+            
+
+            while (timerLocal > 0)
+            {
+                timerLocal -= Time.deltaTime;
+                yield return new WaitForEndOfFrame();
+            }
+
+
+
+            timerLocal = 0;
+            while (timerLocal < 0.6f)
+            {
+                _fadeOnScene.color = new Color(
+                    _fadeOnScene.color.r,
+                    _fadeOnScene.color.g,
+                    _fadeOnScene.color.b,
+                    timerLocal / 0.6f);
+                
+                
+                
+                timerLocal += Time.deltaTime;
+                yield return new WaitForEndOfFrame();
+            }
         }
 
-        
-        
-        timerLocal = 0;
-        while (timerLocal < 0.6f)
-        {
-            _fadeOnScene.color = new Color(
-                _fadeOnScene.color.r,
-                _fadeOnScene.color.g,
-                _fadeOnScene.color.b,
-                timerLocal/0.6f);
-            timerLocal += Time.deltaTime;
-            yield return new WaitForEndOfFrame();
-        }
-        
         _fadeOnScene.color = new Color(
             _fadeOnScene.color.r,
             _fadeOnScene.color.g,
             _fadeOnScene.color.b,
             1);
+        
+        
         
         GenerateNewLevel();
         
@@ -244,6 +340,8 @@ public class GameSystem : MonoBehaviour
                 _fadeOnScene.color.b,
                 timerLocal/0.6f);
             
+            
+            
             timerLocal -= Time.deltaTime;
             yield return new WaitForEndOfFrame();
         }
@@ -253,9 +351,17 @@ public class GameSystem : MonoBehaviour
             _fadeOnScene.color.g,
             _fadeOnScene.color.b,
             0);
+        
+        
 
         BlockControll = false;
-        GameTimer = (35.0f-(GlobalLevel*3));
+        GameTimer = 30.0f;
+        //GameTimer = (30.0f-(GlobalLevel*3));
+        if (FirstStart)
+        {
+            GamePaused = false;
+            FirstStart = false;
+        }
         _corTimer = StartCoroutine(TimerCor());
     }
 
@@ -298,6 +404,7 @@ public class GameSystem : MonoBehaviour
 
     public void TriggerFigure(bool trueVar,float sizeFigure)
     {
+        WinAndAtt.y++;
         //BlockControll = true;
      
         _trueVariantOfElement.MarkeredLine();
@@ -308,6 +415,7 @@ public class GameSystem : MonoBehaviour
         {
             ///Выбран правильный вариант
             _resultText.InvokeFade("То что нужно!");
+            WinAndAtt.x++;
             if (GameTimer >= 13)
             {
                 if (GameTimer >= 18)
@@ -336,19 +444,23 @@ public class GameSystem : MonoBehaviour
 
             PointLevel++;
             _points[PointLevel-1].InvokeFadeIn();
+            _fadeOnSceneText.SetText("");
             if (PointLevel > 2)
             {
+                
+                
                 PointLevel = 0;
                 MainLevel++;
-                if (MainLevel > 2)
-                {
-                    MainLevel = 0;
-                    GlobalLevel++;
-                    if (GlobalLevel > 10)
-                    {
-                        GlobalLevel = 10;
-                    }
-                }
+                _fadeOnSceneText.SetText("LEVEL "+(MainLevel+1));
+//                if (MainLevel > 2)
+//                {
+//                    MainLevel = 0;
+////                    GlobalLevel++;
+////                    if (GlobalLevel > 10)
+////                    {
+////                        GlobalLevel = 10;
+////                    }
+//                }
             }
             
         }
@@ -364,12 +476,10 @@ public class GameSystem : MonoBehaviour
                 _resultText.InvokeFade("Слишком мал");
             }
 
-            PointLevel++;
-            _points[PointLevel-1].InvokeFadeIn();
-            
-            GlobalLevel = 0;
+            //GlobalLevel = 0;
             MainLevel = 0;
             PointLevel = 0;
+            _fadeOnSceneText.SetText(_SorryTexts[Random.Range(0, _SorryTexts.Length)]);
             
             foreach (var point in _points)
             {
@@ -377,6 +487,9 @@ public class GameSystem : MonoBehaviour
             }
         }
 
+        _textWinAndAtt.text = "["+WinAndAtt.x+"-"+WinAndAtt.y+"]";
+        //Debug.Log("POINT "+PointLevel+"; LEVEL "+MainLevel);
+        _menuSystem.SaveGame();
         StartCoroutine(StartNewLevel());
     }
 

@@ -38,7 +38,12 @@ public class FadeOutText : MonoBehaviour
         
         _nowFade = StartCoroutine(FadeCor());
     }
-    
+
+    public void SetText(string SetText)
+    {
+        _mainText.text = SetText;
+    }
+
     public void InvokeFade(string SetText)
     {
         _mainText.text = SetText;
