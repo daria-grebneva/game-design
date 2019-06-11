@@ -11,6 +11,7 @@ public class GameElement : MonoBehaviour
     public Transform Line;
     public SizeOutInFade LineFade;
     public SizeOutInFade MainFade;
+    public FadeToColor MainColorFade;
     public Image MainImage;
     public bool TrueVariant;
 
@@ -43,12 +44,13 @@ public class GameElement : MonoBehaviour
         newFigure.transform.localScale = transform.localScale;
         
         
-        MainFade.InvokeFadeOut();
+       // MainFade.InvokeFadeOut();
     }
 
     public void MarkeredLine()
     {
         Line.GetComponent<Image>().color = new Color(1, 0.629f, 0, 1);
+        MainColorFade.InvokeGreenPulse();
     }
 
     public void Generate(GameSystem mainSys, float pSize, bool trueFigure = false)

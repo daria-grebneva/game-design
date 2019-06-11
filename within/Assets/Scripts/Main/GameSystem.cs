@@ -175,7 +175,7 @@ public class GameSystem : MonoBehaviour
         if (MainLevel >= 1)
         {
             Color classicColor = new Color(0.855f, 0.855f, 0.855f, 1);
-            Camera.main.backgroundColor = Color.Lerp(classicColor,Random.ColorHSV(),0.9f*Mathf.Clamp01((MainLevel-2)/20.0f));
+            Camera.main.backgroundColor = Color.Lerp(classicColor,Random.ColorHSV(),0.8f*Mathf.Clamp01((MainLevel-1)/10.0f));
             
         }
         else
@@ -188,6 +188,10 @@ public class GameSystem : MonoBehaviour
 
         int colOfFigures = 5 + (int)(PointLevel * 1.5f);
         int idOfTrueFigure = Random.Range(0, colOfFigures);
+        
+        float LevelOut = MainLevel / 3;
+        LevelOut = Mathf.Clamp(MainLevel - LevelOut*3,0,2);
+        
         for (int i = 0; i < colOfFigures; i++)
         {
             
@@ -202,9 +206,11 @@ public class GameSystem : MonoBehaviour
             }
             else
             {
+                
+                
                 if (Random.Range(0.0f,1.0f) >= 0.5f)
                 {
-                    float sizeFigure = Mathf.Clamp(TrueSize+Random.Range(1,colOfFigures+1)*LevelsSizeOffset[MainLevel],MinMaxSize.x,1.5f*MinMaxSize.y);
+                    float sizeFigure = Mathf.Clamp(TrueSize+Random.Range(1,colOfFigures+1)*LevelsSizeOffset[(int)LevelOut],MinMaxSize.x,1.5f*MinMaxSize.y);
                     if (MainLevel >= 6)
                     {
                         sizeFigure = Mathf.Lerp(sizeFigure,TrueSize,((MainLevel-5.0f)/10.0f));
@@ -213,7 +219,7 @@ public class GameSystem : MonoBehaviour
                 }
                 else
                 {
-                    float sizeFigure = Mathf.Clamp(TrueSize-Random.Range(1,colOfFigures+1)*LevelsSizeOffset[MainLevel],0.5f*MinMaxSize.x,MinMaxSize.y);
+                    float sizeFigure = Mathf.Clamp(TrueSize-Random.Range(1,colOfFigures+1)*LevelsSizeOffset[(int)LevelOut],0.5f*MinMaxSize.x,MinMaxSize.y);
                     sizeFigure = Mathf.Lerp(sizeFigure,TrueSize,((MainLevel-5.0f)/10.0f));
                     FigureGameElement.Generate(this,sizeFigure);
                 }
@@ -227,7 +233,7 @@ public class GameSystem : MonoBehaviour
             newFigure.name = "figure_FAKE_" + i;
             GameElement FigureGameElement = newFigure.GetComponent<GameElement>();
             
-            float sizeFigure = Mathf.Clamp(TrueSize-Random.Range(1,colOfFigures+1)*LevelsSizeOffset[MainLevel],0.25f*MinMaxSize.x,MinMaxSize.y);
+            float sizeFigure = Mathf.Clamp(TrueSize-Random.Range(1,colOfFigures+1)*LevelsSizeOffset[(int)LevelOut],0.25f*MinMaxSize.x,MinMaxSize.y);
             FigureGameElement.Generate(this,sizeFigure);
          
         }
@@ -267,7 +273,11 @@ public class GameSystem : MonoBehaviour
         _resultText.InvokeFade("Время вышло!");
 
         //GlobalLevel = 0;
-        MainLevel = 0;
+        MainLevel -= 2;
+        if (MainLevel < 0)
+        {
+            MainLevel = 0;
+        }
         PointLevel = 0;
             
         foreach (var point in _points)
@@ -282,10 +292,10 @@ public class GameSystem : MonoBehaviour
     IEnumerator StartNewLevel()
     {
         float timerLocal = 1.85f;
-        _fadeOnSceneText.InvokeFade();
+        
         if (!FirstStart)
         {
-            
+            _fadeOnSceneText.InvokeFade();
 
             while (timerLocal > 0)
             {
@@ -296,19 +306,24 @@ public class GameSystem : MonoBehaviour
 
 
             timerLocal = 0;
-            while (timerLocal < 0.6f)
+            while (timerLocal < 1f)
             {
                 _fadeOnScene.color = new Color(
                     _fadeOnScene.color.r,
                     _fadeOnScene.color.g,
                     _fadeOnScene.color.b,
-                    timerLocal / 0.6f);
+                    timerLocal / 1f);
                 
                 
                 
                 timerLocal += Time.deltaTime;
                 yield return new WaitForEndOfFrame();
             }
+            
+        }
+        else
+        {
+            _fadeOnSceneText.SetText("");
         }
 
         _fadeOnScene.color = new Color(
@@ -331,14 +346,14 @@ public class GameSystem : MonoBehaviour
             }
         }
         
-        timerLocal = 0.6f;
+        timerLocal = 1f;
         while (timerLocal > 0)
         {
             _fadeOnScene.color = new Color(
                 _fadeOnScene.color.r,
                 _fadeOnScene.color.g,
                 _fadeOnScene.color.b,
-                timerLocal/0.6f);
+                timerLocal/1f);
             
             
             
@@ -380,6 +395,7 @@ public class GameSystem : MonoBehaviour
 
                         TriggerFigure(true, figure.Size);
                         figure.MakeLikeSelect();
+                        figure.MainColorFade.InvokeGreen();
 
                     }
                 }
@@ -388,6 +404,7 @@ public class GameSystem : MonoBehaviour
                 {
                     TriggerFigure(false,_pressedVariants[0].Size);
                     _pressedVariants[0].MakeLikeSelect();
+                    _pressedVariants[0].MainColorFade.InvokeRed();
                 }
                 
                 _pressedVariants.Clear();
@@ -477,7 +494,11 @@ public class GameSystem : MonoBehaviour
             }
 
             //GlobalLevel = 0;
-            MainLevel = 0;
+            MainLevel -= 2;
+            if (MainLevel < 0)
+            {
+                MainLevel = 0;
+            }
             PointLevel = 0;
             _fadeOnSceneText.SetText(_SorryTexts[Random.Range(0, _SorryTexts.Length)]);
             

@@ -104,6 +104,7 @@ GameObject:
   - component: {fileID: 3401757522907570194}
   - component: {fileID: 7259992442826243221}
   - component: {fileID: 1158490991453990018}
+  - component: {fileID: 7945698362263499105}
   m_Layer: 5
   m_Name: CircleBody
   m_TagString: Untagged
@@ -184,6 +185,7 @@ MonoBehaviour:
   Line: {fileID: 5082671188102537305}
   LineFade: {fileID: 7412843902567313720}
   MainFade: {fileID: 7259992442826243221}
+  MainColorFade: {fileID: 7945698362263499105}
   MainImage: {fileID: 5082671188436013780}
   TrueVariant: 0
 --- !u!114 &7259992442826243221
@@ -232,3 +234,19 @@ MonoBehaviour:
       m_TypeName: UnityEngine.EventSystems.EventTrigger+TriggerEvent, UnityEngine.UI,
         Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
   delegates: []
+--- !u!114 &7945698362263499105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5082671188436013778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a652ded1ba1441c448514651027b8ec8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MainImage: {fileID: 5082671188436013780}
+  MainColor: {r: 0.49056602, g: 0.49056602, b: 0.49056602, a: 1}
+  FadeColor: {r: 1, g: 1, b: 1, a: 1}
+  TimerToFade: 0.75
